@@ -20,11 +20,53 @@
   (map #(apply t/today-at (break-time-string %)) times))
 
 
-(defn build-turn
-  "Build a turn of work"
-  [turn-list worked-time time-list]
-  (let [turn-times (take 2 time-list)]
-    (build-turn turn-list worked-time (drop 2 time-list)))
+(defn turn-data
+  "Return an assoc with the turn information"
+  [enter exit]
+  ({:enter enter
+    :exit exit
+    :elapsed (t/in-minutes (t/interval enter exit))}))
+
+
+(defn guess-enter
+  "Tries to guess the exit time based on the enter time"
+  [enter]
+  ())
+
+
+(defn guess-exit
+  "Tries to guess the enter time based on the time in the previews turn"
+  [previous-turn]
+  ())
+
+
+(defn single-turn
+  "Create a single turn, based either on the enter/exit times,
+   only the enter time or building an expected time based on
+   the current turns (the last one)."
+  [last-turn enter exit]
+  (if (not (nil? exit))      ; we have enter and exit times
+    (turn-data enter exit)
+    (if (not (nil? enter))   ; we just have the enter time
+      (let [guessed-exit (guess-exit enter)]
+        (turn-data enter guessed-exit)
+        ; no enter or exit time; guess everything
+        (let [guessed-enter (guess-enter last-turn)
+              guessed-exit (guess-exit guessed-enter)]
+          (turn-data guessed-enter guessed-exit))))))
+
+
+(defn build-turns
+  "Build the list of work turns"
+  [working-time turn-list [enter exit & rest]]
+  (if (and (nil? enter)              ; there is not an open turn
+           (>= working-time 510))    ; 510 mins = 8.5h
+    turn-list
+    (do (let [new-turn (single-turn (last turn-list) enter exit)]
+          (into turn-list new-turn)
+          (build-turns (+ working-time (:elapsed new-turn))
+                       turn-list
+                       rest)))))
 
 
 (defn -main
