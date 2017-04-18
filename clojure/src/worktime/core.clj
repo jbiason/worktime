@@ -30,14 +30,20 @@
 
 (defn guess-enter
   "Tries to guess the exit time based on the enter time"
-  [enter]
+  [last-turn]
   ())
 
 
 (defn guess-exit
   "Tries to guess the enter time based on the time in the previews turn"
-  [previous-turn]
+  [enter-time]
   ())
+
+
+(defn working-time
+  "Return the amount of time working in the turn list."
+  [turn-list]
+  (reduce (fn [result record] (+ result (:elapsed record))) 0 turn-list))
 
 
 (defn single-turn
@@ -45,15 +51,13 @@
    only the enter time or building an expected time based on
    the current turns (the last one)."
   [last-turn enter exit]
-  (if (not (nil? exit))      ; we have enter and exit times
-    (turn-data enter exit)
-    (if (not (nil? enter))   ; we just have the enter time
-      (let [guessed-exit (guess-exit enter)]
-        (turn-data enter guessed-exit)
-        ; no enter or exit time; guess everything
-        (let [guessed-enter (guess-enter last-turn)
-              guessed-exit (guess-exit guessed-enter)]
-          (turn-data guessed-enter guessed-exit))))))
+  (cond
+    (not (nil? exit))  (turn-data enter exit)
+    (not (nil? enter)) (let [guessed-exit (guess-exit enter)]
+                         (turn-data enter guessed-exit))
+    :else              (let [guessed-enter (guess-enter last-turn)
+                             guessed-exit  (guess-exit guessed-enter)]
+                         (turn-data guessed-enter guessed-exit))))
 
 
 (defn build-turns
