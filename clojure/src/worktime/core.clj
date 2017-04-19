@@ -23,27 +23,34 @@
 (defn turn-data
   "Return an assoc with the turn information"
   [enter exit]
-  ({:enter enter
-    :exit exit
-    :elapsed (t/in-minutes (t/interval enter exit))}))
+  (let [result {:enter enter
+                :exit exit
+                :elapsed (t/in-minutes (t/interval enter exit))}]
+    result))
 
 
 (defn guess-enter
   "Tries to guess the exit time based on the enter time"
   [last-turn]
-  ())
+  (let [exit (:exit last-turn)]
+    (if (t/within? exit (t/today-at 11 00) (t/today-at 12 30))
+      (t/plus exit (t/hours 1))           ; lunch break is 1 hour
+      (t/plus exit (t/minutes 15)))))     ; turn break is 15 minutes
 
 
 (defn guess-exit
   "Tries to guess the enter time based on the time in the previews turn"
   [enter-time]
-  ())
+  (let [full-turn (t/plus enter-time (t/hours 6) (t/minutes 30))]
+    full-turn))
 
 
 (defn working-time
   "Return the amount of time working in the turn list."
   [turn-list]
-  (reduce (fn [result record] (+ result (:elapsed record))) 0 turn-list))
+  (reduce (fn [result record] (+ result (:elapsed record)))
+          0
+          turn-list))
 
 
 (defn single-turn
@@ -51,6 +58,7 @@
    only the enter time or building an expected time based on
    the current turns (the last one)."
   [last-turn enter exit]
+  (println "single turn" enter exit)
   (cond
     (not (nil? exit))  (turn-data enter exit)
     (not (nil? enter)) (let [guessed-exit (guess-exit enter)]
@@ -67,7 +75,9 @@
            (>= working-time 510))    ; 510 mins = 8.5h
     turn-list
     (do (let [new-turn (single-turn (last turn-list) enter exit)]
+          (println "new turn" new-turn)
           (into turn-list new-turn)
+          (println "current turns" turn-list)
           (build-turns (+ working-time (:elapsed new-turn))
                        turn-list
                        rest)))))
@@ -80,6 +90,6 @@
   [& args]
   (->> args
        (conv-time)
-       (map #(f/unparse output-formatter %))
-       (clojure.string/join " ")
-       (println)))
+       (build-turns 0 [])
+       (println)
+       ))
