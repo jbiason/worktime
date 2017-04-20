@@ -1,7 +1,7 @@
 (ns worktime.core
   (:gen-class)
-  (require [clj-time.core :as t])
-  (require [clj-time.format :as f]))
+  (require [clj-time.core :as t]
+           [clj-time.format :as f]))
 
 
 (def output-formatter (f/formatter "HH:mm"))
@@ -29,6 +29,14 @@
     result))
 
 
+(defn print-turn-data
+  "Pretty print the turn data"
+  [turn]
+  (println (f/unparse output-formatter (:enter turn))
+           (f/unparse output-formatter (:exit  turn))
+           (:elapsed turn)))
+
+
 (defn guess-enter
   "Tries to guess the exit time based on the enter time"
   [last-turn]
@@ -41,16 +49,8 @@
 (defn guess-exit
   "Tries to guess the enter time based on the time in the previews turn"
   [enter-time]
-  (let [full-turn (t/plus enter-time (t/hours 6) (t/minutes 30))]
+  (let [full-turn (t/plus enter-time (t/hours 6))]
     full-turn))
-
-
-(defn working-time
-  "Return the amount of time working in the turn list."
-  [turn-list]
-  (reduce (fn [result record] (+ result (:elapsed record)))
-          0
-          turn-list))
 
 
 (defn single-turn
@@ -58,7 +58,6 @@
    only the enter time or building an expected time based on
    the current turns (the last one)."
   [last-turn enter exit]
-  (println "single turn" enter exit)
   (cond
     (not (nil? exit))  (turn-data enter exit)
     (not (nil? enter)) (let [guessed-exit (guess-exit enter)]
@@ -70,16 +69,13 @@
 
 (defn build-turns
   "Build the list of work turns"
-  [working-time turn-list [enter exit & rest]]
-  (if (and (nil? enter)              ; there is not an open turn
-           (>= working-time 510))    ; 510 mins = 8.5h
-    turn-list
-    (do (let [new-turn (single-turn (last turn-list) enter exit)
-              new-turn-list (conj turn-list new-turn)]
-          (println "new turn" new-turn)
-          (println "current turns" new-turn-list)
+  [working-time previous-turn [enter exit & rest]]
+  (if (not (and (nil? enter)              ; there is not an open turn
+                (>= working-time 510)))    ; 510 mins = 8.5h
+    (do (let [new-turn (single-turn previous-turn enter exit)]
+          (print-turn-data new-turn)
           (build-turns (+ working-time (:elapsed new-turn))
-                       new-turn-list
+                       new-turn
                        rest)))))
 
 
@@ -90,6 +86,5 @@
   [& args]
   (->> args
        (conv-time)
-       (build-turns 0 [])
-       (println)
+       (build-turns 0 nil)
        ))
