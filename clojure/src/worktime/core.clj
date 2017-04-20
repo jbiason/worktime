@@ -48,22 +48,29 @@
 
 (defn guess-exit
   "Tries to guess the enter time based on the time in the previews turn"
-  [enter-time]
-  (let [full-turn (t/plus enter-time (t/hours 6))]
-    full-turn))
+  [enter-time working-time]
+  (if (t/before? enter-time (t/today-at 12 00))
+    (let [exit-time (t/today-at 12 00)] exit-time)
+    (let [remaining-time (- 510 working-time)]
+      (if (> remaining-time 360)
+        (let [full-turn (t/plus enter-time (t/hours 6))] full-turn)
+        (let [full-turn (t/plus enter-time (t/minutes remaining-time))]
+          full-turn)))))
 
 
 (defn single-turn
   "Create a single turn, based either on the enter/exit times,
    only the enter time or building an expected time based on
    the current turns (the last one)."
-  [last-turn enter exit]
+  [last-turn working-time enter exit]
   (cond
     (not (nil? exit))  (turn-data enter exit)
-    (not (nil? enter)) (let [guessed-exit (guess-exit enter)]
+    (not (nil? enter)) (let [guessed-exit (guess-exit enter working-time)]
                          (turn-data enter guessed-exit))
     :else              (let [guessed-enter (guess-enter last-turn)
-                             guessed-exit  (guess-exit guessed-enter)]
+                             guessed-exit  (guess-exit
+                                            guessed-enter
+                                            working-time)]
                          (turn-data guessed-enter guessed-exit))))
 
 
@@ -72,7 +79,7 @@
   [working-time previous-turn [enter exit & rest]]
   (if (not (and (nil? enter)              ; there is not an open turn
                 (>= working-time 510)))    ; 510 mins = 8.5h
-    (do (let [new-turn (single-turn previous-turn enter exit)]
+    (do (let [new-turn (single-turn previous-turn working-time enter exit)]
           (print-turn-data new-turn)
           (build-turns (+ working-time (:elapsed new-turn))
                        new-turn
