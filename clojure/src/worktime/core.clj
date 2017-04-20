@@ -74,12 +74,12 @@
   (if (and (nil? enter)              ; there is not an open turn
            (>= working-time 510))    ; 510 mins = 8.5h
     turn-list
-    (do (let [new-turn (single-turn (last turn-list) enter exit)]
+    (do (let [new-turn (single-turn (last turn-list) enter exit)
+              new-turn-list (conj turn-list new-turn)]
           (println "new turn" new-turn)
-          (into turn-list new-turn)
-          (println "current turns" turn-list)
+          (println "current turns" new-turn-list)
           (build-turns (+ working-time (:elapsed new-turn))
-                       turn-list
+                       new-turn-list
                        rest)))))
 
 
