@@ -5,6 +5,7 @@
 
 
 (def output-formatter (f/formatter "HH:mm"))
+(def elapsed-formatter (f/formatter "HH'h'mm'm'"))
 
 
 (defn break-time-string
@@ -32,9 +33,10 @@
 (defn print-turn-data
   "Pretty print the turn data"
   [turn]
-  (println (f/unparse output-formatter (:enter turn))
-           (f/unparse output-formatter (:exit  turn))
-           (:elapsed turn)))
+  (let [elapsed (t/plus (t/today-at 00 00) (t/minutes (:elapsed turn)))]
+    (println (f/unparse output-formatter (:enter turn))
+             (f/unparse output-formatter (:exit  turn))
+             (f/unparse elapsed-formatter elapsed))))
 
 
 (defn guess-enter
