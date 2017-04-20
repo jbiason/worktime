@@ -41,7 +41,7 @@
   "Tries to guess the exit time based on the enter time"
   [last-turn]
   (let [exit (:exit last-turn)]
-    (if (t/within? exit (t/today-at 11 00) (t/today-at 12 30))
+    (if (t/within? (t/interval (t/today-at 11 00) (t/today-at 12 30)) exit)
       (t/plus exit (t/hours 1))           ; lunch break is 1 hour
       (t/plus exit (t/minutes 15)))))     ; turn break is 15 minutes
 
