@@ -11,14 +11,20 @@
 (defn break-time-string
   "Break strings into their time components"
   [clock]
-  (map #(Integer/parseInt %) (clojure.string/split clock #":")))
-  ; (fn [x] (Integer/parseInt x))
+  (map (fn [x] (Integer/parseInt x)) (clojure.string/split clock #":")))
 
 
 (defn conv-time
   "Convert times into a full datetime"
   [times]
   (map #(apply t/today-at (break-time-string %)) times))
+
+
+(defn clear-invalid-times
+  "Remove invalid times in the list"
+  [time-list]
+  (let [right-now (t/now)]
+    (filter (fn [x] (t/before? x right-now)) time-list)))
 
 
 (defn turn-data
@@ -33,7 +39,8 @@
 (defn print-turn-data
   "Pretty print the turn data"
   [turn]
-  (let [elapsed (t/plus (t/today-at 00 00) (t/minutes (:elapsed turn)))]
+  (let [elapsed (t/plus (t/today-at 00 00)
+                        (t/minutes (:elapsed turn)))]
     (println (f/unparse output-formatter (:enter turn))
              (f/unparse output-formatter (:exit  turn))
              (f/unparse elapsed-formatter elapsed))))
@@ -43,7 +50,9 @@
   "Tries to guess the exit time based on the enter time"
   [last-turn]
   (let [exit (:exit last-turn)]
-    (if (t/within? (t/interval (t/today-at 11 00) (t/today-at 12 30)) exit)
+    (if (t/within? (t/interval (t/today-at 11 00)
+                               (t/today-at 12 30))
+                   exit)
       (t/plus exit (t/hours 1))           ; lunch break is 1 hour
       (t/plus exit (t/minutes 15)))))     ; turn break is 15 minutes
 
@@ -95,5 +104,6 @@
   [& args]
   (->> args
        (conv-time)
+       (clear-invalid-times)
        (build-turns 0 nil)
        ))
