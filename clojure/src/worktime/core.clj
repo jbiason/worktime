@@ -1,7 +1,7 @@
 (ns worktime.core
   (:gen-class)
-  (require [clj-time.core :as t]
-           [clj-time.format :as f]))
+  (:require [clj-time.core :as t]
+            [clj-time.format :as f]))
 
 
 (def output-formatter (f/formatter "HH:mm"))
