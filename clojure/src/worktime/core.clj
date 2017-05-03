@@ -121,9 +121,9 @@
    building the turns with either the values or guessing the next
    ones."
   [& args]
-  (->> args
-       (conv-time)
-       (clear-invalid-times)
-       (build-turns [])
-       (print-turns)
-       ))
+  (let [working-list (->> args
+                          (conv-time)
+                          (clear-invalid-times)
+                          (build-turns []))]
+    (print-turns working-list)
+    ))
