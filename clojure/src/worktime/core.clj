@@ -11,20 +11,22 @@
 (defn break-time-string
   "Break strings into their time components"
   [clock]
-  (map (fn [x] (Integer/parseInt x)) (clojure.string/split clock #":")))
+  (map (fn [string-time] (Integer/parseInt string-time))
+       (clojure.string/split clock #":")))
 
 
 (defn conv-time
   "Convert times into a full datetime"
   [times]
-  (map #(apply t/today-at (break-time-string %)) times))
+  (map (fn [string-pairs] (apply t/today-at (break-time-string string-pairs)))
+       times))
 
 
 (defn clear-invalid-times
   "Remove invalid times in the list"
   [time-list]
   (let [right-now (t/now)]
-    (filter (fn [x] (t/before? x right-now)) time-list)))
+    (filter (fn [time] (t/before? time right-now)) time-list)))
 
 
 (defn turn-data
@@ -36,6 +38,14 @@
     result))
 
 
+(defn work-total
+  "Return the amount of working time in the turn list"
+  [turn-list]
+  (reduce (fn [result record] (+ result (:elapsed record)))
+          0
+          turn-list))
+
+
 (defn print-turn-data
   "Pretty print the turn data"
   [turn]
@@ -44,6 +54,13 @@
     (println (f/unparse output-formatter (:enter turn))
              (f/unparse output-formatter (:exit  turn))
              (f/unparse elapsed-formatter elapsed))))
+
+
+(defn print-turns
+  "Print all the turns"
+  [turn-list]
+  (doseq [record turn-list]
+    (print-turn-data record)))
 
 
 (defn guess-enter
@@ -87,14 +104,16 @@
 
 (defn build-turns
   "Build the list of work turns"
-  [working-time previous-turn [enter exit & rest]]
-  (if (not (and (nil? enter)              ; there is not an open turn
-                (>= working-time 510)))    ; 510 mins = 8.5h
-    (do (let [new-turn (single-turn previous-turn working-time enter exit)]
-          (print-turn-data new-turn)
-          (build-turns (+ working-time (:elapsed new-turn))
-                       new-turn
-                       rest)))))
+  [turn-list [enter exit & rest]]
+  (let [working-time (work-total turn-list)]
+    (if (and (nil? enter)              ; there is not an open turn
+             (>= working-time 510))    ; 510 mins = 8.5h
+      turn-list
+      (do (let [previous-turn (last turn-list)
+                new-turn (single-turn previous-turn working-time enter exit)
+                new-turn-list (conj turn-list new-turn)]
+            (build-turns new-turn-list
+                         rest))))))
 
 
 (defn -main
@@ -105,5 +124,6 @@
   (->> args
        (conv-time)
        (clear-invalid-times)
-       (build-turns 0 nil)
+       (build-turns [])
+       (print-turns)
        ))
