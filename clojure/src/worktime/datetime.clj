@@ -1,7 +1,8 @@
 (ns worktime.datetime
   (:gen-class)
   (:require [clj-time.core :as t]
-            [clj-time.format :as f]))
+            [clj-time.format :as f]
+            [clj-time.local :as l]))
 
 
 ;; output format definitions
@@ -11,17 +12,10 @@
 
 (defn break-time-string
   "Break strings into their time components."
-  [clock]
+  [time-as-string]
   (map (fn [string-time] (Integer/parseInt string-time))
-       (clojure.string/split clock #":")))
+       (clojure.string/split time-as-string #":")))
 
-
-(defn convert-time-list-into-datetime-list
-  "Convert times into a full datetime."
-  [times]
-  (map (fn [string-pairs] (apply datetime-today-at
-                                 (break-time-string string-pairs)))
-       times))
 
 (defn today-at
   "Return a datetime object with today's date and the specified hour and
@@ -30,10 +24,18 @@
   (t/today-at hour minute))
 
 
+(defn convert-time-list-into-datetime-list
+  "Convert times into a full datetime."
+  [time-list]
+  (map (fn [string-pairs] (apply today-at
+                                 (break-time-string string-pairs)))
+       time-list))
+
+
 (defn now
   "Return a datetime object with the time right now, in the current timezone."
   []
-  (t/local-now))
+  (l/local-now))
 
 
 (defn before?
@@ -46,7 +48,7 @@
 (defn elapsed
   "Return the minutes elapsed between the first datetime and the second."
   [first second]
-  (t/in-minutes (t/interval enter exit)))
+  (t/in-minutes (t/interval first second)))
 
 
 (defn format-hours
