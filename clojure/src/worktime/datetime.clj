@@ -55,3 +55,17 @@
   "Return a string representing only the hour/minute of a datetime."
   [datetime]
   (f/unparse output-formatter datetime))
+
+
+(defn add
+  "Add minutes to a datetime object."
+  [datetime minutes]
+  (t/plus datetime (t/minutes minutes)))
+
+
+(defn format-elapsed
+  "Return a string representating only the elapsed minutes in a human-readable
+   format."
+  [minutes]
+  (let [elapsed-date (add (today-at 0 0) minutes)]
+    (f/unparse elapsed-formatter elapsed-date)))

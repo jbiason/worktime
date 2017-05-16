@@ -29,3 +29,14 @@
   (testing "Tests if elapsed calculates the elapsed time between two events
             correctly."
     (= (elapsed (today-at 9 15) (today-at 10 15)) 60)))
+
+
+(deftest elapsed-print-test
+  (testing "Tests if the format-elapsed renders content correctly."
+    (do (= (format-elapsed 50) "00h50m")
+        (= (format-elapsed 120) "02h00m"))))
+
+
+(deftest add-test
+  (testing "Checks if adding minutes to a date actually adds minutes."
+    (= (format-hours (add (today-at 00 15) 60)) "01:15")))

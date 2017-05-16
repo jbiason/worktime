@@ -1,6 +1,6 @@
 (ns worktime.turn
   (:gen-class)
-  (:require worktime.datetime :as datetime))
+  (:require [worktime.datetime :as datetime]))
 
 
 (defn new
@@ -27,8 +27,7 @@
 (defn print-elapsed
   "Return the elapsed time between the enter/exit times."
   [turn]
-  (t/plus (datetime/today-at 00 00)
-           (t/minutes (:elapsed turn))))
+  (datetime/format-elapsed (:elapsed turn)))
 
 
 (defn turn-print
@@ -39,26 +38,26 @@
            (print-elapsed turn)))
 
 
-(defn turn-guess-next-enter
-  "Tries to guess the exit time based on the enter time from the previous
-   turn."
-  [turn]
-  (let [exit (:exit turn)]
-    (if (t/within? (t/interval (datetime-today-at 11 00)
-                               (datetime-today-at 12 30))
-                   exit)
-      (t/plus exit (t/hours 1))           ; lunch break is 1 hour
-      (t/plus exit (t/minutes 15)))))     ; turn break is 15 minutes
+;(defn turn-guess-next-enter
+;  "Tries to guess the exit time based on the enter time from the previous
+;   turn."
+;  [turn]
+;  (let [exit (:exit turn)]
+;    (if (t/within? (t/interval (datetime-today-at 11 00)
+;                               (datetime-today-at 12 30))
+;                   exit)
+;      (t/plus exit (t/hours 1))           ; lunch break is 1 hour
+;      (t/plus exit (t/minutes 15)))))     ; turn break is 15 minutes
 
 
-(defn turn-guess-exit
-  "Tries to guess the enter time based on the enter time of the turn."
-  [turn working-time]
-  (let [exit-time (:exit turn)]
-    (if (t/before? enter-time (t/today-at 12 00))
-      (let [exit-time (t/today-at 12 00)] exit-time)
-      (let [remaining-time (- 510 working-time)]
-        (if (> remaining-time 360)
-          (let [full-turn (t/plus enter-time (t/hours 6))] full-turn)
-          (let [full-turn (t/plus enter-time (t/minutes remaining-time))]
-            full-turn))))))
+;(defn turn-guess-exit
+;  "Tries to guess the enter time based on the enter time of the turn."
+;  [turn working-time]
+;  (let [exit-time (:exit turn)]
+;    (if (t/before? enter-time (t/today-at 12 00))
+;      (let [exit-time (t/today-at 12 00)] exit-time)
+;      (let [remaining-time (- 510 working-time)]
+;        (if (> remaining-time 360)
+;          (let [full-turn (t/plus enter-time (t/hours 6))] full-turn)
+;          (let [full-turn (t/plus enter-time (t/minutes remaining-time))]
+;            full-turn))))))
