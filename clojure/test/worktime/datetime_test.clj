@@ -40,3 +40,8 @@
 (deftest add-test
   (testing "Checks if adding minutes to a date actually adds minutes."
     (= (format-hours (add (today-at 00 15) 60)) "01:15")))
+
+
+(deftest within-test
+  (testing "Within"
+    (within? (today-at 9 0) (today-at 8 55) (today-at 9 5))))

@@ -39,10 +39,26 @@
 (defn before?
   "Return true if the first datetime element occurs before the second."
   [first second]
-  (let [midnight (t/today-at 0 0)
+  (let [midnight (today-at 0 0)
         first-minutes (t/in-minutes (t/interval midnight first))
         second-minutes (t/in-minutes (t/interval midnight second))]
     (< first-minutes second-minutes)))
+
+
+(defn after?
+  "Return true if the first datetime occurs after the second."
+  [first second]
+  (let [midnight (today-at 0 0)
+        first-minutes (t/in-minutes (t/interval midnight first))
+        second-minutes (t/in-minutes (t/interval midnight second))]
+    (> first-minutes second-minutes)))
+
+
+(defn within?
+  "Returns true if the datetime is between the two other datetimes."
+  [datetime first second]
+  (and (after? datetime first)
+       (before? datetime second)))
 
 
 (defn elapsed
