@@ -24,12 +24,10 @@
   (t/today-at hour minute))
 
 
-(defn convert-time-list-into-datetime-list
+(defn time-to-datetime
   "Convert times into a full datetime."
-  [time-list]
-  (map (fn [string-pairs] (apply today-at
-                                 (break-time-string string-pairs)))
-       time-list))
+  [string-pairs]
+  (apply today-at (break-time-string string-pairs)))
 
 
 (defn now
@@ -41,8 +39,10 @@
 (defn before?
   "Return true if the first datetime element occurs before the second."
   [first second]
-  (< (t/in-minutes first) (t/in-minutes second)))
-  ; this is basically "before?", but I want to avoid predicates at the moment
+  (let [midnight (t/today-at 0 0)
+        first-minutes (t/in-minutes (t/interval midnight first))
+        second-minutes (t/in-minutes (t/interval midnight second))]
+    (< first-minutes second-minutes)))
 
 
 (defn elapsed
