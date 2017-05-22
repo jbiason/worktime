@@ -3,7 +3,7 @@
   (:require [worktime.datetime :as datetime]))
 
 
-(defn new
+(defn new-turn
   "Return an assoc with the turn information."
   [enter exit]
   (let [result {:enter enter
